@@ -90,20 +90,9 @@ void SimpleBootstrapExample() {
     parameters.SetScalingTechnique(rescaleTech);
     parameters.SetFirstModSize(firstMod);
 
-    /*  A4) Multiplicative depth.
-    * The goal of bootstrapping is to increase the number of available levels we have, or in other words,
-    * to dynamically increase the multiplicative depth. However, the bootstrapping procedure itself
-    * needs to consume a few levels to run. We compute the number of bootstrapping levels required
-    * using GetBootstrapDepth, and add it to levelsAvailableAfterBootstrap to set our initial multiplicative
-    * depth. We recommend using the input parameters below to get started.
-    */
     std::vector<uint32_t> levelBudget = {3, 2};
 
-    // Note that the actual number of levels avalailable after bootstrapping before next bootstrapping 
-    // will be levelsAvailableAfterBootstrap - 1 because an additional level
-    // is used for scaling the ciphertext before next bootstrapping (in 64-bit CKKS bootstrapping)
-    // uint32_t levelsAvailableAfterBootstrap = 10;
-    usint depth = 26;//levelsAvailableAfterBootstrap + FHECKKSRNS::GetBootstrapDepth(levelBudget, secretKeyDist);
+    usint depth = 26;
     parameters.SetMultiplicativeDepth(depth);
 
     CryptoContext<DCRTPoly> cryptoContext = GenCryptoContext(parameters);
@@ -115,7 +104,6 @@ void SimpleBootstrapExample() {
     cryptoContext->Enable(FHE);
 
     usint ringDim = cryptoContext->GetRingDimension();
-    // This is the maximum number of slots that can be used for full packing.
     usint numSlots = ringDim / 2;
     std::cout << "CKKS scheme is using ring dimension " << ringDim << std::endl << std::endl;
 
@@ -133,33 +121,21 @@ void SimpleBootstrapExample() {
     }
     size_t encodedLength  = x.size();
 
-    // We start with a depleted ciphertext that has used up all of its levels.
     Plaintext ptxt = cryptoContext->MakeCKKSPackedPlaintext(x, 1, depth - 1);
 
     ptxt->SetLength(encodedLength);
-    // std::cout << "Input: " << ptxt << std::endl;
 
     Ciphertext<DCRTPoly> ciph = cryptoContext->Encrypt(keyPair.publicKey, ptxt);
 
-    std::cout << "Initial number of levels remaining: " << depth - ciph->GetLevel() << std::endl;
-
-    // Perform the bootstrapping operation. The goal is to increase the number of levels remaining
-    // for HE computation.
     auto start = std::chrono::high_resolution_clock::now();
     auto ciphertextAfter = cryptoContext->EvalBootstrap(ciph);
 
     auto stop = std::chrono::high_resolution_clock::now();
     printf("Total time: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
     printf("Slots amortize time: %.6lf ms\n", (std::chrono::duration_cast<std::chrono::milliseconds>(stop - start) / (double)x.size()).count());
-    // std::cout << "Bootstrapping time: " << std::chrono::duration<double>(stop - start).count() << " s\n\n";
-
-    std::cout << "Number of levels remaining after bootstrapping: "
-              << depth - ciphertextAfter->GetLevel() - (ciphertextAfter->GetNoiseScaleDeg() - 1) << "\n\n";
 
     Plaintext result;
     cryptoContext->Decrypt(keyPair.secretKey, ciphertextAfter, &result);
     result->SetLength(encodedLength);
-    // std::cout << "Output after bootstrapping: " << result << "\n";
-    printf("\nPrecision: %.4lf bits\n", result->GetLogPrecision());
-    printf("\nPrecision: %.4lf bits\n", result->GetOutputPrecision(x));
+    printf("\nPrecision: %.2lf bits\n", result->GetOutputPrecision(x));
 }

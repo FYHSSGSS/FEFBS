@@ -140,7 +140,7 @@ void SimpleBootstrapExample() {
 
     // Perform the bootstrapping operation. The goal is to increase the number of levels remaining
     // for HE computation.
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     auto ciphertextAfter = cryptoContext->EvalBootstrap(ciph);
 
     // auto stop = std::chrono::high_resolution_clock::now();
