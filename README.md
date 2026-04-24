@@ -160,7 +160,7 @@ Table 3 showcases our framework's ability to evaluate various functions with hig
 
 ### Reproduction of Comparison Results
 - [BMTPH21]: This work is natively supported by the OpenFHE library. We have provided the benchmark source code for this baseline at `src/pke/examples/FEFBS/bootstrapping_test/BMTPH21_test.cpp`, which can be verified by running the binary at `/bin/examples/pke/BMTPH21_test`.
-- [BKSS25] and [AKP25] (Table 3): This is an LUT-based method where **precision** is analytically as the logarithm of the degree polynomial $\tau$. Since [BKSS25] shares the same underlying bootstrapping pipeline as our work, differing only in the degree of the polynomial, we measured its **latency** by configuring our implementation with their specific degree parameters. This equivalent complexity setup ensures a fair comparison on the same hardware.
+- [BKSS25] and [AKP25] (Table 3): This is an LUT-based method where **precision** is analytically as the logarithm of the degree polynomial $\tau$. Since [BKSS25] and [AKP25] shares the same underlying bootstrapping pipeline as our work, differing only in the degree of the polynomial, we measured its **latency** by configuring our implementation with their specific degree parameters. This equivalent complexity setup ensures a fair comparison on the same hardware.
 - [CHKS25]: As this work introduces a fundamentally different paradigm and remains closed-source, we directly cited the performance and precision metrics from the results reported in Table 3 of [CHKS25].
 
 ### Runtime Expectations
