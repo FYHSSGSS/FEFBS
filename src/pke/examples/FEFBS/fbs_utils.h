@@ -43,7 +43,7 @@ namespace lbcrypto {
     }
 
     void FuncBootstrapExample(std::string func, double lower_bound, double upper_bound, int N, int speed,
-                          std::function<double(double)> target, std::string filename, size_t slots_num) {
+                          std::function<double(double)> target, std::string filename, size_t slots_num, double claimedPrecision) {
         auto ringDim = 1 << 16;
         CCParams<CryptoContextCKKSRNS> parameters;
         CKKSDataType ckksDataType = COMPLEX;
@@ -92,7 +92,7 @@ namespace lbcrypto {
         } else {
             puts("\n[Pre-computation] Generating Fourier series coefficients for the target function...");
             FourierCalculator fourierCalc;
-            coeffspython = fourierCalc.calculate(func, lower_bound, upper_bound, N, speed);
+            coeffspython = fourierCalc.calculate(func, lower_bound, upper_bound, N, speed + 1);
             puts("[Pre-computation] Done. ");
         }
         for (size_t i = 0; i < numSlots; i++) {
@@ -137,7 +137,7 @@ namespace lbcrypto {
             printf("%.10lf ", resultvec[i * numSlots / numSamples]);
         }
         puts("\n--------------------------------------------------");
-        printf("\nPrecision: %.4lf bits\n", result->GetOutputPrecision(y));
+        printf("\nPrecision: %.2lf bits\n", result->GetOutputPrecisionWithClaim(y, claimedPrecision)); 
     }
 
 }

@@ -24,6 +24,6 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    FuncBootstrapExample(sigmoid, -8, 8, 34, 9, sigmoidfunc, filename, 32768);
+    FuncBootstrapExample(sigmoid, -8, 8, 34, 8, sigmoidfunc, filename, 32768, 31.34);
     return 0;
 }

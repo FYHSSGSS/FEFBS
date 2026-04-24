@@ -97,7 +97,7 @@ void SimpleBootstrapExample() {
     * using GetBootstrapDepth, and add it to levelsAvailableAfterBootstrap to set our initial multiplicative
     * depth. We recommend using the input parameters below to get started.
     */
-    std::vector<uint32_t> levelBudget = {4, 4};
+    std::vector<uint32_t> levelBudget = {3, 2};
 
     // Note that the actual number of levels avalailable after bootstrapping before next bootstrapping 
     // will be levelsAvailableAfterBootstrap - 1 because an additional level
@@ -125,14 +125,19 @@ void SimpleBootstrapExample() {
     cryptoContext->EvalMultKeyGen(keyPair.secretKey);
     cryptoContext->EvalBootstrapKeyGen(keyPair.secretKey, numSlots);
 
-    std::vector<double> x = {0.25, 0.5, 0.75, 1.0, 2.0, 3.0, 4.0, 5.0};
+    constexpr double left = -0.5;
+    constexpr double mid  = 0.5;
+    std::vector<double> x(numSlots);
+    for (size_t i = 0; i < numSlots; i++) {
+        x[i] = left + static_cast<double>(i) * (mid - left) / static_cast<double>(numSlots);
+    }
     size_t encodedLength  = x.size();
 
     // We start with a depleted ciphertext that has used up all of its levels.
     Plaintext ptxt = cryptoContext->MakeCKKSPackedPlaintext(x, 1, depth - 1);
 
     ptxt->SetLength(encodedLength);
-    std::cout << "Input: " << ptxt << std::endl;
+    // std::cout << "Input: " << ptxt << std::endl;
 
     Ciphertext<DCRTPoly> ciph = cryptoContext->Encrypt(keyPair.publicKey, ptxt);
 
@@ -143,7 +148,9 @@ void SimpleBootstrapExample() {
     auto start = std::chrono::high_resolution_clock::now();
     auto ciphertextAfter = cryptoContext->EvalBootstrap(ciph);
 
-    // auto stop = std::chrono::high_resolution_clock::now();
+    auto stop = std::chrono::high_resolution_clock::now();
+    printf("Total time: %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count());
+    printf("Slots amortize time: %.6lf ms\n", (std::chrono::duration_cast<std::chrono::milliseconds>(stop - start) / (double)x.size()).count());
     // std::cout << "Bootstrapping time: " << std::chrono::duration<double>(stop - start).count() << " s\n\n";
 
     std::cout << "Number of levels remaining after bootstrapping: "
@@ -152,5 +159,7 @@ void SimpleBootstrapExample() {
     Plaintext result;
     cryptoContext->Decrypt(keyPair.secretKey, ciphertextAfter, &result);
     result->SetLength(encodedLength);
-    std::cout << "Output after bootstrapping: " << result << "\n";
+    // std::cout << "Output after bootstrapping: " << result << "\n";
+    printf("\nPrecision: %.4lf bits\n", result->GetLogPrecision());
+    printf("\nPrecision: %.4lf bits\n", result->GetOutputPrecision(x));
 }

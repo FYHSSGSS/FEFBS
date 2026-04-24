@@ -214,6 +214,30 @@ public:
         double mae = sum / static_cast<double>(target.size());
         return -std::log2(mae / range);
     }
+
+    double GetOutputPrecisionWithClaim(std::vector<double> target, double claimedPrecision) const override{
+        if (target.empty() || target.size() != value.size()) {
+            OPENFHE_THROW("Size mismatch in GetOutputPrecision. Target size: " + std::to_string(target.size()) +
+                           ", value size: " + std::to_string(value.size()));
+        }
+        auto [min_it, max_it] = std::minmax_element(target.begin(), target.end());
+        double sum = 0.0, range = *max_it - *min_it;
+        if (range < 1e-15) range = 1.0;
+        for (size_t i = 0; i < target.size(); ++i) {
+            sum += std::abs(target[i] - value[i]);
+        }
+        double mae = sum / static_cast<double>(target.size());
+        if (claimedPrecision > 0.0) {
+            double quantize = range * std::pow(2.0, -claimedPrecision); 
+            if (mae < quantize) {
+                mae = quantize;  
+            } else {
+                mae = std::ceil(mae / quantize) * quantize;
+            }
+        }
+        return -std::log2(mae / range) * 10.0 / 10.0; 
+    }
+
     /**
    * SetLength of the plaintext to the given size
    * @param siz

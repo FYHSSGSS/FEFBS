@@ -362,6 +362,10 @@ public:
         OPENFHE_THROW("no output of precision available for the current scheme");
     }
 
+    virtual double GetOutputPrecisionWithClaim(std::vector<double> target, double ClaimPre) const {
+        OPENFHE_THROW("no output of precision available for the current scheme");
+    }
+
     virtual const std::string& GetStringValue() const {
         OPENFHE_THROW("not a string");
     }

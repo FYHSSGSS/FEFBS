@@ -31,6 +31,6 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    FuncBootstrapExample(boot, -0.5, 0.5, 25, 18, bootfunc, filename, numSlots);
+    FuncBootstrapExample(boot, -0.5, 0.5, 25, 17, bootfunc, filename, numSlots, 31.20);
     return 0;
 }

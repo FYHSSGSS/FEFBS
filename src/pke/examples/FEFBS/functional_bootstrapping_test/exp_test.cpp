@@ -24,6 +24,6 @@ int main(int argc, char* argv[]) {
             }
         }
     }
-    FuncBootstrapExample(exp, -2, 2, 29, 18, expfunc, filename, 32768);
+    FuncBootstrapExample(exp, -2, 2, 29, 18, expfunc, filename, 32768, 32.23);
     return 0;
 }
