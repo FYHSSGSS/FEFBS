@@ -7,6 +7,7 @@
 #include <string>
 #include <complex>
 #include <csignal>
+#include <cstdlib>
 #include <unistd.h> 
 
 void sigsegv_handler(int sig) {
@@ -48,7 +49,17 @@ namespace lbcrypto {
         CCParams<CryptoContextCKKSRNS> parameters;
         CKKSDataType ckksDataType = COMPLEX;
         parameters.SetCKKSDataType(ckksDataType);
-        SecretKeyDist secretKeyDist       = SPARSE_TERNARY;
+        SecretKeyDist secretKeyDist       = UNIFORM_TERNARY;
+        // SecretKeyDist secretKeyDist       = SPARSE_TERNARY;
+        // SecretKeyDist secretKeyDist       = SPARSE_ENCAPSULATED;
+        if (const char* skd = std::getenv("FEFBS_SKD")) {
+            if (std::string(skd) == "sparse")
+                secretKeyDist = SPARSE_TERNARY;
+            else if (std::string(skd) == "encap")
+                secretKeyDist = SPARSE_ENCAPSULATED;
+            else if (std::string(skd) == "uniform")
+                secretKeyDist = UNIFORM_TERNARY;
+        }
         ScalingTechnique rescaleTech      = FLEXIBLEAUTO;
         usint dcrtBits                    = 59;
         usint firstMod                    = 60;
