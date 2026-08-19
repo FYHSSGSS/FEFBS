@@ -49,9 +49,9 @@ namespace lbcrypto {
         CCParams<CryptoContextCKKSRNS> parameters;
         CKKSDataType ckksDataType = COMPLEX;
         parameters.SetCKKSDataType(ckksDataType);
-        SecretKeyDist secretKeyDist       = UNIFORM_TERNARY;
+        // SecretKeyDist secretKeyDist       = UNIFORM_TERNARY;
         // SecretKeyDist secretKeyDist       = SPARSE_TERNARY;
-        // SecretKeyDist secretKeyDist       = SPARSE_ENCAPSULATED;
+        SecretKeyDist secretKeyDist       = SPARSE_ENCAPSULATED;
         if (const char* skd = std::getenv("FEFBS_SKD")) {
             if (std::string(skd) == "sparse")
                 secretKeyDist = SPARSE_TERNARY;
@@ -66,7 +66,20 @@ namespace lbcrypto {
         size_t numSlots                   = slots_num;
         std::vector<uint32_t> levelBudget = {3, 2};
         std::vector<uint32_t> bsgsDim     = {0, 0};
-        usint depth                       = levelBudget[0] + levelBudget[1] + 12 + 9;
+
+        std::vector<std::complex<double>> coeffspython;
+        if (filename != "") {
+            printf("[Config] Loading coefficients from file: %s\n", filename.c_str());
+            coeffspython = LoadCoeffs(filename);
+            puts("[Config] Done. ");
+        } else {
+            puts("\n[Pre-computation] Generating Fourier series coefficients for the target function...");
+            FourierCalculator fourierCalc;
+            coeffspython = fourierCalc.calculate(func, lower_bound, upper_bound, N, speed);
+            puts("[Pre-computation] Done. ");
+        }
+
+        usint depth = FHECKKSRNS::GetFEFBTDepth(levelBudget, coeffspython, secretKeyDist) + 6;
         parameters.SetMultiplicativeDepth(depth);
 
         parameters.SetSecretKeyDist(secretKeyDist);
@@ -95,17 +108,6 @@ namespace lbcrypto {
         constexpr double left = -0.5;
         constexpr double mid  = 0.5;
         std::vector<double> x(numSlots);
-        std::vector<std::complex<double>> coeffspython;
-        if (filename != "") {
-            printf("[Config] Loading coefficients from file: %s\n", filename.c_str());
-            coeffspython = LoadCoeffs(filename);
-            puts("[Config] Done. ");    
-        } else {
-            puts("\n[Pre-computation] Generating Fourier series coefficients for the target function...");
-            FourierCalculator fourierCalc;
-            coeffspython = fourierCalc.calculate(func, lower_bound, upper_bound, N, speed);
-            puts("[Pre-computation] Done. ");
-        }
         for (size_t i = 0; i < numSlots; i++) {
             x[i] = left + static_cast<double>(i) * (mid - left) / static_cast<double>(numSlots);
         }

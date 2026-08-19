@@ -1130,3 +1130,48 @@ TEST_P(UTCKKSRNS_FBT, CKKSRNS) {
 
 GTEST_ALLOW_UNINSTANTIATED_PARAMETERIZED_TEST(UTCKKSRNS_FBT);  // testCases.size() == 0 if NATIVEINT == 128
 INSTANTIATE_TEST_SUITE_P(UnitTests, UTCKKSRNS_FBT, ::testing::ValuesIn(testCases), testName);
+
+TEST(UTCKKSRNS_FBT, AdjustCiphertextFEFBT) {
+    auto checkScaleAlignment = [](ScalingTechnique scalingTechnique, bool shouldAlign) {
+        CCParams<CryptoContextCKKSRNS> parameters;
+        parameters.SetCKKSDataType(COMPLEX);
+        parameters.SetSecretKeyDist(UNIFORM_TERNARY);
+        parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetRingDim(512);
+        parameters.SetBatchSize(8);
+        parameters.SetKeySwitchTechnique(HYBRID);
+        parameters.SetScalingModSize(50);
+        parameters.SetFirstModSize(52);
+        parameters.SetMultiplicativeDepth(6);
+        parameters.SetScalingTechnique(scalingTechnique);
+
+        auto cc = GenCryptoContext(parameters);
+        cc->Enable(PKE);
+        cc->Enable(KEYSWITCH);
+        cc->Enable(LEVELEDSHE);
+
+        auto keyPair = cc->KeyGen();
+        auto ptxt    = cc->MakeCKKSPackedPlaintext(std::vector<double>(8, 1.0));
+        auto ctxt    = cc->Encrypt(keyPair.publicKey, ptxt);
+        ctxt->SetLevel(1);
+        ctxt->SetScalingFactor(1.0);
+
+        FHECKKSRNS scheme;
+        scheme.AdjustCiphertextFEFBT(ctxt);
+
+        if (shouldAlign) {
+            auto cryptoParams = std::dynamic_pointer_cast<CryptoParametersCKKSRNS>(cc->GetCryptoParameters());
+            ASSERT_NE(cryptoParams, nullptr);
+            EXPECT_DOUBLE_EQ(ctxt->GetScalingFactor(), cryptoParams->GetScalingFactorReal(1));
+        }
+        else {
+            EXPECT_DOUBLE_EQ(ctxt->GetScalingFactor(), 1.0);
+        }
+    };
+
+    checkScaleAlignment(FIXEDMANUAL, false);
+    checkScaleAlignment(FLEXIBLEAUTO, true);
+#if NATIVEINT != 128
+    checkScaleAlignment(FLEXIBLEAUTOEXT, true);
+#endif
+}
